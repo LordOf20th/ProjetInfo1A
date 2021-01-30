@@ -1,0 +1,9 @@
+Le : 30/01/2021
+Base de données : film.sqlite
+Requêtes valides effectuées et résultats correspondant
+
+
+SELECT acteur.PRENOM, acteur.NOM, role.LIBELLE     FROM liste_acteurs, acteur, role     WHERE 1 = liste_acteurs.ID_FILM     AND liste_acteurs.ID_ACTEUR = acteur.ID AND liste_acteurs.ID_ROLE = role.ID
+prenom    nom       libelle    
+-------------------------------
+Robert    Downey    Ironman    
