@@ -62,6 +62,20 @@ def recuperer_casting(id_film):
 def tuple_vers_casting(tuple):
     return "avec {} {} en tant que {}".format(tuple[0],tuple[1],tuple[2])
 
+def unite_casting_vers_casting_lisible(liste_casting):
+    chaine_casting = ""
+    if len(liste_casting) == 1: # Si un seul acteur on retourne juste le str
+        chaine_casting = liste_casting[0]
+    else:
+        j=0
+        for i in range(len(liste_casting)):
+            while j < len(liste_casting)-2: # Avant le dernier élément on met des virgules
+                chaine_casting += liste_casting[j]+", "
+                j+=1
+        chaine_casting += liste_casting[-2] + " et " + liste_casting[-1]
+    return chaine_casting
+
+
 def afficher_films():
     print("Affichage des films")
     infos_films_tuples = recuperer_infos_films()
@@ -79,7 +93,7 @@ def afficher_films():
     print("\nListe des films du vidéoclub : ")
     for film in infos_films:
         print("--")
-        print("{} - {} ({}), {} min, {}, {}. Casting : {}".format(film[0],film[1],film[2],film[3],film[4],film[5], film[6]))
+        print("{} - {} ({}), {} min, {}, {}. Casting : {}".format(film[0],film[1],film[2],film[3],film[4],film[5], unite_casting_vers_casting_lisible(film[6])))
 
         
 
