@@ -80,7 +80,8 @@ def afficher_films():
     print("Affichage des films")
     infos_films_tuples = recuperer_infos_films()
     infos_films = []
-    for film in infos_films_tuples: # On convertit les tuples en liste pour manipuler les infos
+    for film in infos_films_tuples: 
+    # On convertit les tuples en liste pour manipuler les infos
         infos_films.append(list(film))
     for i in range(len(infos_films)):
         id_film = infos_films[i][0] # on recupere l'id du ieme film
@@ -89,7 +90,6 @@ def afficher_films():
         for acteur_et_role in infos_casting:
             cast.append(tuple_vers_casting(acteur_et_role)) # On ajoute le cast dans la liste d'info
         infos_films[i].append(cast)
-        print(infos_films[i])
     print("\nListe des films du vidéoclub : ")
     for film in infos_films:
         print("--")
