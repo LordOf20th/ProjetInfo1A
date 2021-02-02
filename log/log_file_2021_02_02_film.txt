@@ -1,0 +1,69 @@
+Le : 02/02/2021
+Base de données : film.sqlite
+Requêtes valides effectuées et résultats correspondant
+
+
+SELECT film.titre,  email, date_debut, date_fin, support.type_support, support.prix FROM location, film, support WHERE location.id = 7 AND id_support = support.id AND support.id_film = film.id
+titre                     email      date_debut    date_fin      type_supportprix  
+-----------------------------------------------------------------------------------
+Avengers: Infinity War    l.l@apt    2021-02-02    2021-03-02    Blue-Ray    25    
+
+
+INSERT INTO location (email, id_support, date_debut, date_fin) VALUES ('ll@test', 5, '2021-02-02', '2021-02-02')
+Voici les effets de la modification : 
+id   email                                id_supportdate_debut    date_fin      
+--------------------------------------------------------------------------------
+1    fan2superheros@agroparistech.fr      2    2018-05-25    2018-06-25    
+2    fan2superheros@agroparistech.fr      3    2018-05-25    2018-06-25    
+3    fan2superheros@agroparistech.fr      5    2018-05-25    2018-06-25    
+4    fan2superheros@agroparistech.fr      7    2018-05-25    2018-06-25    
+5    cumberbatch4ever@agroparistech.fr    4    2018-04-10    2018-05-10    
+6    cumberbatch4ever@agroparistech.fr    8    2018-04-10    2018-05-10    
+7    l.l@apt                              5    2021-02-02    2021-03-02    
+8    ll@test                              5    2021-02-02    2021-02-02    
+La modification a été validée ! 
+
+
+UPDATE support SET quantite = 9 WHERE id = 5
+Voici les effets de la modification : 
+id   id_filmtype_supportprix  quantite
+--------------------------------------
+1    1    DVD         15    5    
+2    1    Blue-Ray    20    8    
+3    2    DVD         10    3    
+4    3    Blue-Ray    25    5    
+5    4    Blue-Ray    25    9    
+6    5    DVD         10    5    
+7    5    Blue-Ray    20    5    
+8    6    DVD         10    5    
+La modification a été validée ! 
+
+
+UPDATE support SET quantite = 9 WHERE id = 5
+Voici les effets de la modification : 
+id   id_filmtype_supportprix  quantite
+--------------------------------------
+1    1    DVD         15    5    
+2    1    Blue-Ray    20    8    
+3    2    DVD         10    3    
+4    3    Blue-Ray    25    5    
+5    4    Blue-Ray    25    9    
+6    5    DVD         10    5    
+7    5    Blue-Ray    20    5    
+8    6    DVD         10    5    
+La modification a été validée ! 
+
+
+UPDATE support SET quantite = 10 WHERE id = 5
+Voici les effets de la modification : 
+id   id_filmtype_supportprix  quantite
+--------------------------------------
+1    1    DVD         15    5     
+2    1    Blue-Ray    20    8     
+3    2    DVD         10    3     
+4    3    Blue-Ray    25    5     
+5    4    Blue-Ray    25    10    
+6    5    DVD         10    5     
+7    5    Blue-Ray    20    5     
+8    6    DVD         10    5     
+La modification a été validée ! 

@@ -1,0 +1,35 @@
+Le : 01/02/2021
+Base de données : film.sqlite
+Requêtes valides effectuées et résultats correspondant
+
+
+UPDATE liste_acteurs SET id_role = 3 WHERE id_film = 6 AND id_acteur = 2
+Voici les effets de la modification : 
+id_filmid_acteurid_role
+-----------------------
+1    1    1    
+2    1    2    
+3    2    3    
+4    1    1    
+4    2    3    
+4    3    4    
+5    1    1    
+5    3    4    
+6    2    3    
+La modification a été validée ! 
+
+
+UPDATE liste_acteurs SET id_role = 2 WHERE id_film = 6 AND id_acteur = 2
+Voici les effets de la modification : 
+id_filmid_acteurid_role
+-----------------------
+1    1    1    
+2    1    2    
+3    2    3    
+4    1    1    
+4    2    3    
+4    3    4    
+5    1    1    
+5    3    4    
+6    2    2    
+La modification a été validée ! 
