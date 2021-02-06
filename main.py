@@ -135,15 +135,33 @@ def recuperer_supports_par_id_film(id_film):
     requeteSQL = """SELECT id, type_support, prix, quantite
     FROM support
     WHERE ? = id_film"""
-    # Exécution de la requête
     curseur.execute(requeteSQL, [id_film])
-
-    # Traitement du résultat de la requête
     resultat = curseur.fetchall()
     if resultat:
         return resultat
     else:
         print("Pas d'entrée correspondante ! recuperer_supports_par_id_film")
+        
+def compter_nombre_fois_supports_loues(id_support):
+    """
+    Parameters
+    ----------
+    id_support : int
+        L'id du support dans la table support.
+
+    Returns
+    -------
+    int
+        Renvoie le nombre de fois que ce support a été loué.
+    """
+    requeteSQL = """SELECT COUNT(distinct id)
+    FROM location
+    WHERE id_support = ?
+    """
+    curseur.execute(requeteSQL, [id_support])
+    resultat = curseur.fetchall() 
+    nbre_de_fois_loues = resultat[0][0]
+    return nbre_de_fois_loues
 
 def afficher_supports_disponibles_par_id_film(id_film):
     tuple_de_supports = recuperer_supports_par_id_film(id_film)
@@ -152,13 +170,14 @@ def afficher_supports_disponibles_par_id_film(id_film):
         liste_de_supports.append([i]+list(tuple_de_supports[i]))
     print("\nSupports disponibles :")
     for support in liste_de_supports:
-        if support[4] > 0:
+        quantite_disponible  = support[4] - compter_nombre_fois_supports_loues(support[1])
+        if quantite_disponible > 0:
             print("--------")
             print("{} - {}, prix de location : {} euros, quantité disponible : {}".format(
                 support[0]+1,
                 support[2],
                 support[3],
-                support[4]))
+                quantite_disponible))
         else:
             print("{}, prix de location : {} euros, pas en stock pour l'instant".format(
                 support[2],
@@ -170,13 +189,6 @@ def date_plus_1_mois(date):
     plus_un_mois = relativedelta(months=1)
     nouvelle_date = date + plus_un_mois
     return nouvelle_date
-
-def diminuer_stock_support(id_support):
-    requeteSQL =""" UPDATE support
-    SET quantite = quantite - 1
-    WHERE id = ? """
-    curseur.execute(requeteSQL, [id_support])
-    connexion.commit()
         
 def insertion_location(email, id_support, date_debut, date_fin):
     requeteSQL = """INSERT INTO location (email, id_support, date_debut, date_fin)
@@ -253,12 +265,11 @@ l'une des options ci-dessus (le numéro du support) : """))-1
         support_choisi[2],
         support_choisi[3]))
     print("--------")
-    email = input("Veuillez saisir votre mail (sous la forme : johndoe@awebsite.com) : ")
+    email = input("Veuillez saisir l'email (sous la forme : johndoe@awebsite.com) : ")
     valider_email = input("L'email : {} est bien saisi ? (saisir o ou n pour oui ou non) : ".format(email))
-    while valider_email.lower()[0] != "o":
-        email = input("Veuillez saisir votre mail (sous la forme : johndoe@awebsite.com): ")
+    while valider_email == "" or valider_email.lower()[0] != "o":
+        email = input("Veuillez saisir l'email (sous la forme : johndoe@awebsite.com): ")
         valider_email = input("L'email : {} est bien saisi ? (saisir o ou n pour oui ou non) : ".format(email))
-    diminuer_stock_support(id_support) # On retire le support de la qté présente
     insertion_location(email, id_support, date_debut, date_fin)
     print("Location enregistrée !\n--------\n")
     
@@ -322,17 +333,13 @@ def afficher_locations():
 def recupere_locations_finies_aujourdhui():
     requeteSQL = """SELECT id, email, id_support, date_debut, date_fin
     FROM location
-    WHERE date_fin = CURRENT_DATE"""
-    # Exécution de la requête
+    WHERE date_fin <= CURRENT_DATE"""
     curseur.execute(requeteSQL)
-
-    # Traitement du résultat de la requête
     resultat = curseur.fetchall()
     if resultat:
         return resultat
     else:
         print("Pas de locations qui finissent ce jour")
-        return 0
     
 def retour_en_stock(id_support):
     requeteSQL = """UPDATE support
@@ -341,24 +348,38 @@ def retour_en_stock(id_support):
     curseur.execute(requeteSQL, [id_support])
     connexion.commit()
 
-
+def supprimer_location(id_location):
+    requeteSQL = """DELETE FROM location
+    WHERE id = ?"""
+    curseur.execute(requeteSQL, [id_location])
+    connexion.commit()
+    
 def verifier_retours():
-    print("""\n--------\nVérification des retours pour le {} (NE PAS EXÉCUTER PLUSIEURS FOIS PAR JOUR)
-""".format(date.today()))
-    locations_echues = recupere_locations_finies_aujourdhui()
-    if locations_echues == 0:
-        print("Pas de retour aujourd'hui !")
-    else: # On considère que les retours se font sans fautes, 
-    # ajouter une colonne booléenne "revenu_en_stock" pourrait 
-    # faciliter la gestion
-        retours_du_jour = 0
-        for location in locations_echues:
-            id_support = location[2]
-            retour_en_stock(id_support) # On remet le support dans la réserve
-            retours_du_jour += 1 # On compte le nombre de retours
-        print("Aujourd'hui ({}) il y a eu {} retour(s).\n--------\n".format(
-        retours_du_jour, date.today()))
-
+    print("Vérification des retours")
+    liste_locations_finies = recupere_locations_finies_aujourdhui()
+    nombre_locations_revenues = 0
+    for location_finie in liste_locations_finies:
+        # On récupère l'id de la location échue
+        id_location = location_finie[0]
+        # On récupère les infos de la location échue
+        infos_location_finie=recuperer_infos_location(id_location)
+        print("Pour la location :\nID : {} - {} en {} par {} du {} au {} pour {} euros\n".format(
+            id_location,
+            infos_location_finie[0],
+            infos_location_finie[1],
+            infos_location_finie[2],
+            infos_location_finie[3],
+            infos_location_finie[4],
+            infos_location_finie[5]))
+        valider_suppression_location = input("Le support est revenu en stock ? (saisir o ou n pour oui ou non) : ")
+        while valider_suppression_location == "" or valider_suppression_location.lower()[0] != "o" or valider_suppression_location.lower()[0] != "n":
+            valider_suppression_location = input("Le support est revenu en stock ? (saisir o ou n pour oui ou non) : ")
+        if valider_suppression_location.lower()[0] == "o":
+            supprimer_location(id_location)
+            nombre_locations_revenues += 1
+        elif valider_suppression_location.lower()[0] == "n":
+            print("La location n'est pas revenue, penser à renvoyer un mail à {}".format(infos_location_finie[2]))
+    return
 
 #------------------------------------------------------------------------------
 #                  Fonctions pour ajouter un film

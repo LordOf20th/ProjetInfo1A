@@ -1,0 +1,94 @@
+Le : 05/02/2021
+Base de données : film.sqlite
+Requêtes valides effectuées et résultats correspondant
+
+
+SELECT COUNT(distinct id)     FROM location     WHERE id_support = 5
+COUNT(distinct id)
+------------------
+3    
+
+
+UPDATE support SET quantite = 10 WHERE id = 5
+Voici les effets de la modification : 
+id   id_filmtype_supportprix  quantite
+--------------------------------------
+1    1    DVD         15    5     
+2    1    Blue-Ray    20    8     
+3    2    DVD         10    3     
+4    3    Blue-Ray    25    5     
+5    4    Blue-Ray    25    10    
+6    5    DVD         10    5     
+7    5    Blue-Ray    20    5     
+8    6    DVD         10    5     
+La modification a été validée ! 
+
+
+DELETE FROM location WHERE email = 'LL'
+Voici les effets de la modification : 
+id    email                                id_supportdate_debut    date_fin      
+---------------------------------------------------------------------------------
+1     fan2superheros@agroparistech.fr      2    2018-05-25    2018-06-25    
+2     fan2superheros@agroparistech.fr      3    2018-05-25    2018-06-25    
+3     fan2superheros@agroparistech.fr      5    2018-05-25    2018-06-25    
+4     fan2superheros@agroparistech.fr      7    2018-05-25    2018-06-25    
+5     cumberbatch4ever@agroparistech.fr    4    2018-04-10    2018-05-10    
+6     cumberbatch4ever@agroparistech.fr    8    2018-04-10    2018-05-10    
+7     l.l@apt                              5    2021-02-02    2021-03-02    
+8     ll@test                              5    2021-02-02    2021-02-02    
+10                                         5    2021-02-05    2021-03-05    
+11    ll                                   5    2021-02-05    2021-03-05    
+La modification a été validée ! 
+
+
+DELETE FROM location WHERE email like '%ll%'
+Voici les effets de la modification : 
+id    email                                id_supportdate_debut    date_fin      
+---------------------------------------------------------------------------------
+1     fan2superheros@agroparistech.fr      2    2018-05-25    2018-06-25    
+2     fan2superheros@agroparistech.fr      3    2018-05-25    2018-06-25    
+3     fan2superheros@agroparistech.fr      5    2018-05-25    2018-06-25    
+4     fan2superheros@agroparistech.fr      7    2018-05-25    2018-06-25    
+5     cumberbatch4ever@agroparistech.fr    4    2018-04-10    2018-05-10    
+6     cumberbatch4ever@agroparistech.fr    8    2018-04-10    2018-05-10    
+7     l.l@apt                              5    2021-02-02    2021-03-02    
+10                                         5    2021-02-05    2021-03-05    
+La modification a été validée ! 
+
+
+DELETE FROM location WHERE email like '%l.l%'
+Voici les effets de la modification : 
+id    email                                id_supportdate_debut    date_fin      
+---------------------------------------------------------------------------------
+1     fan2superheros@agroparistech.fr      2    2018-05-25    2018-06-25    
+2     fan2superheros@agroparistech.fr      3    2018-05-25    2018-06-25    
+3     fan2superheros@agroparistech.fr      5    2018-05-25    2018-06-25    
+4     fan2superheros@agroparistech.fr      7    2018-05-25    2018-06-25    
+5     cumberbatch4ever@agroparistech.fr    4    2018-04-10    2018-05-10    
+6     cumberbatch4ever@agroparistech.fr    8    2018-04-10    2018-05-10    
+10                                         5    2021-02-05    2021-03-05    
+La modification a été validée ! 
+
+
+DELETE FROM location WHERE email like ''
+Voici les effets de la modification : 
+id   email                                id_supportdate_debut    date_fin      
+--------------------------------------------------------------------------------
+1    fan2superheros@agroparistech.fr      2    2018-05-25    2018-06-25    
+2    fan2superheros@agroparistech.fr      3    2018-05-25    2018-06-25    
+3    fan2superheros@agroparistech.fr      5    2018-05-25    2018-06-25    
+4    fan2superheros@agroparistech.fr      7    2018-05-25    2018-06-25    
+5    cumberbatch4ever@agroparistech.fr    4    2018-04-10    2018-05-10    
+6    cumberbatch4ever@agroparistech.fr    8    2018-04-10    2018-05-10    
+La modification a été validée ! 
+
+
+SELECT id, email, id_support, date_debut, date_fin     FROM location     WHERE date_fin <= CURRENT_DATE
+id   email                                id_supportdate_debut    date_fin      
+--------------------------------------------------------------------------------
+1    fan2superheros@agroparistech.fr      2    2018-05-25    2018-06-25    
+2    fan2superheros@agroparistech.fr      3    2018-05-25    2018-06-25    
+3    fan2superheros@agroparistech.fr      5    2018-05-25    2018-06-25    
+4    fan2superheros@agroparistech.fr      7    2018-05-25    2018-06-25    
+5    cumberbatch4ever@agroparistech.fr    4    2018-04-10    2018-05-10    
+6    cumberbatch4ever@agroparistech.fr    8    2018-04-10    2018-05-10    
