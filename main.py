@@ -118,7 +118,7 @@ def afficher_films():
 #------------------------------------------------------------------------------
 
 def recuperer_infos_film_par_id(id_film):
-    """ Fonction qui récupère les infos de chaque entrée de la table film """
+    """ Fonction qui récupère les infos d'une entrée de la table film """
     requeteSQL = """SELECT ID, TITRE, DATE_SORTIE, DUREE, GENRE, NATIONALITE 
     FROM film WHERE id = ?"""
     # Exécution de la requête
@@ -127,7 +127,7 @@ def recuperer_infos_film_par_id(id_film):
     # Traitement du résultat de la requête
     resultat = curseur.fetchall()
     if resultat:
-        return resultat
+        return list(resultat[0])
     else:
         print("Pas d'entrée correspondante ! recuperer_infos_film_par_id")
 
@@ -140,7 +140,8 @@ def recuperer_supports_par_id_film(id_film):
     if resultat:
         return resultat
     else:
-        print("Pas d'entrée correspondante ! recuperer_supports_par_id_film")
+        print("Pas de support dispo !")
+        return 0
         
 def compter_nombre_fois_supports_loues(id_support):
     """
@@ -165,6 +166,9 @@ def compter_nombre_fois_supports_loues(id_support):
 
 def afficher_supports_disponibles_par_id_film(id_film):
     tuple_de_supports = recuperer_supports_par_id_film(id_film)
+    # On gère le cas où il n'existe pas de support pour ce film
+    if tuple_de_supports == 0:
+        return 0
     liste_de_supports = []
     for i in range(len(tuple_de_supports)):
         liste_de_supports.append([i]+list(tuple_de_supports[i]))
@@ -191,7 +195,7 @@ def date_plus_1_mois(date):
     return nouvelle_date
         
 def insertion_location(email, id_support, date_debut, date_fin):
-    requeteSQL = """INSERT INTO location (email, id_support, date_debut, date_fin)
+    requeteSQL = """INSERT INTO location(email, id_support, date_debut, date_fin)
     VALUES (?, ?, ?, ?)"""
     curseur.execute(requeteSQL, [email, id_support, date_debut, date_fin])    
     connexion.commit()
@@ -218,7 +222,6 @@ des options ci-dessus (le numéro du film) : """))
         return
     id_film = choix
     infos_film = recuperer_infos_film_par_id(id_film)
-    infos_film = list(infos_film[0])
     print("\nFilm sélectionné :")
     print("{} - {} ({}), {} min, {}, {}.".format(infos_film[0],
                                                  infos_film[1],
@@ -227,6 +230,9 @@ des options ci-dessus (le numéro du film) : """))
                                                  infos_film[4],
                                                  infos_film[5]))
     liste_de_supports = afficher_supports_disponibles_par_id_film(id_film)
+    if liste_de_supports == 0:
+        print("Impossible louer ce film, il n'y a pas de supports du tout")
+        return
     print("--------\n0 pour quitter")
     # On initialise avec -1 qui code pour quitter
     liste_id_selection_supports_disponibles = [-1]
@@ -385,18 +391,459 @@ def verifier_retours():
 #                  Fonctions pour ajouter un film
 #------------------------------------------------------------------------------
 
+def saisir_infos_film():
+    validation = False
+    while not validation:
+        print("--------\nSaisie des informations du film :\n")
+        titre = input("Veuillez saisir le titre : ")
+        date_sortie = input("Veuillez saisir le date de sortie (annnée-mois-jour) : ")
+        duree = int(input("Veuillez saisir la durée (en minutes, juste le nombre entier, sans min ou h) : "))
+        genre = input("Veuillez saisir le genre : ").capitalize()
+        nationalite = input("Veuillez saisir la nationalité : ").upper()
+        print("Récapitulatif : {} ({}), {} min, {}, {}.\n--------".format(
+        titre,
+        date_sortie,
+        duree,
+        genre,
+        nationalite))
+        valider_saisie = input("Ces informations sont-elles correctes ? (o pour oui, n pour non ou q pour quitter) : ")
+        while valider_saisie.lower()[0] not in ["o","n","q"]:
+            print("Veuillez répondre par oui ou non.")
+            valider_saisie = input("Ces informations sont-elles correctes ? (o pour oui, n pour non ou q pour quitter) : ")
+        if valider_saisie.lower()[0] == "q":
+            print("Ajout annulé !\n--------")
+            return "q"
+        elif valider_saisie.lower()[0] == "o":
+            validation = True
+            return (titre, date_sortie, duree, genre, nationalite)
+        elif valider_saisie.lower()[0] == "n":
+            validation = False
+
+
+def inserer_film(titre, date_sortie, duree, genre, nationalite):
+    requeteSQL = """INSERT INTO film (titre, date_sortie, duree, genre, nationalite)
+    VALUES (?, ?, ?, ?, ?)"""
+    curseur.execute(requeteSQL, [titre, date_sortie, duree, genre, nationalite])    
+    connexion.commit()
+    
+def recuperer_id_film(titre, date_sortie, duree, genre, nationalite):
+    requeteSQL = """SELECT id
+    FROM film
+    WHERE titre = ?
+    AND date_sortie = ?
+    AND duree = ?
+    AND genre = ?
+    AND nationalite = ?"""
+    curseur.execute(requeteSQL, [titre, date_sortie, duree, genre, nationalite])
+    resultat = curseur.fetchall()
+    if resultat:
+        return resultat[0][0]
+    else:
+        print("Pas d'entrée correspondante ! recuperer_id_film")
+        
+# Gestion des acteurs
+
+def inserer_acteur(nom, prenom, site_web):
+    requeteSQL="""INSERT INTO acteur(nom,prenom,site_web) VALUES (?, ?, ?)"""
+    curseur.execute(requeteSQL, [nom, prenom, site_web])    
+    connexion.commit()
+
+def ajouter_acteur():
+    validation = False
+    while not validation:
+        print("--------\nSaisie des informations de l'acteur :\n")
+        nom = input("Veuillez saisir le nom : ").capitalize()
+        prenom = input("Veuillez saisir le prénom : ").capitalize()
+        site_web = input("Veuillez saisir le site web (facultatif, Entrée pour passer) : ")
+        if site_web == "":
+            print("{} {}".format(prenom, nom))
+        elif site_web != "":
+            print("{} {} ({})".format(prenom, nom, site_web))
+        valider_saisie = input("Ces informations sont-elles correctes ? (o pour oui, n pour non ou q pour quitter) : ")
+        while valider_saisie.lower()[0] not in ["o","n","q"]:
+            print("Veuillez répondre par oui ou non.")
+            valider_saisie = input("Ces informations sont-elles correctes ? (o pour oui, n pour non ou q pour quitter) : ")
+        if valider_saisie.lower()[0] == "q":
+            print("Ajout annulé !\n--------")
+            return "q"
+        elif valider_saisie.lower()[0] == "o":
+            validation = True
+            return (nom, prenom, site_web)
+        elif valider_saisie.lower()[0] == "n":
+            validation = False
+            
+def nouveaux_acteurs():
+    print("\n--------\nAjout de nouveaux acteurs")
+    afficher_acteurs()
+    termine = False
+    while not termine:
+        infos_acteur = ajouter_acteur()
+        if infos_acteur == "q":
+        # Si on veut quitter
+            return
+        nom, prenom, site_web = infos_acteur
+        inserer_acteur(nom, prenom, site_web)
+        print("{} {} ajouté !".format(nom, prenom))
+        continuer = input("Voulez-vous continuer à ajouter de nouveaux acteurs ? (o pour oui ou n pour non) : ")
+        while continuer.lower()[0] not in ["o","n"]:
+            print("Saisie incorrecte !")
+            continuer = input("Voulez-vous continuer à ajouter de nouveaux acteurs ? (o pour oui ou n pour non) : ")
+        if continuer.lower()[0] == "n":
+            termine = True
+    
+def recuperer_infos_acteurs():
+    """ Fonction qui récupère les infos de chaque entrée de la table acteur """
+    requeteSQL = """SELECT ID, NOM, PRENOM, SITE_WEB 
+    FROM acteur"""
+    # Exécution de la requête
+    curseur.execute(requeteSQL)
+
+    # Traitement du résultat de la requête
+    resultat = curseur.fetchall()
+    if resultat:
+        return resultat
+    else:
+        print("Pas d'entrée correspondante ! recuperer_infos_acteurs")
+
+def afficher_acteurs():
+    infos_acteurs = recuperer_infos_acteurs()
+    liste_ids_acteurs = []
+    print("\n--------\nAffichage des acteurs\n")
+    for acteur in infos_acteurs:
+        liste_ids_acteurs.append(acteur[0])
+        if acteur[3] != "":
+            print("{} - {} {} ({})".format(acteur[0], 
+                                      acteur[2], 
+                                      acteur[1], 
+                                      acteur[3]))
+        else:
+            print("{} - {} {}".format(acteur[0],
+                                      acteur[2],
+                                      acteur[1]))
+    print("--------\n")
+    return liste_ids_acteurs
+
+def recuperer_infos_acteurs_par_id(id_acteur):
+    """ Fonction qui récupère les infos d'une entrée de la table acteur pour un id_acteur"""
+    requeteSQL = """SELECT NOM, PRENOM, SITE_WEB 
+    FROM acteur
+    WHERE id = ?"""
+    # Exécution de la requête
+    curseur.execute(requeteSQL, [id_acteur])
+
+    # Traitement du résultat de la requête
+    resultat = curseur.fetchall()
+    if resultat:
+        if resultat[0][2] != "":
+            # Résultat sous la forme Prénom Nom (Site Web)
+            return "{} {} ({})".format(resultat[0][1], resultat[0][0], resultat[0][2])
+        elif resultat[0][2] == "":
+            # Résultat sous la forme Prénom Nom
+            return "{} {}".format(resultat[0][1], resultat[0][0])
+    else:
+        print("Pas d'entrée correspondante ! recuperer_infos_acteurs")    
+
+# Gestion des roles
+
+def inserer_role(libelle_role):
+    requeteSQL="""INSERT INTO role(libelle) VALUES (?)"""
+    curseur.execute(requeteSQL, [libelle_role])    
+    connexion.commit()
+
+def ajouter_role():
+    validation = False
+    while not validation:
+        print("--------\nSaisie des informations du rôle :\n")
+        libelle_role = input("Veuillez saisir le libelle du rôle : ")
+        valider_saisie = input("Ces informations sont-elles correctes ? (o pour oui, n pour non ou q pour quitter) : ")
+        while valider_saisie.lower()[0] not in ["o","n", "q"]:
+            print("Veuillez répondre par oui ou non.")
+            valider_saisie = input("Ces informations sont-elles correctes ? (o pour oui, n pour non ou q pour quitter) : ")
+        if valider_saisie.lower()[0] == "q":
+            print("Ajout annulé !\n--------")
+            return "q"
+        elif valider_saisie.lower()[0] == "o":
+            validation = True
+            return libelle_role
+        elif valider_saisie.lower()[0] == "n":
+            validation = False
+            
+def nouveaux_roles():
+    print("\n--------\nAjout de nouveaux roles")
+    afficher_roles()
+    termine = False
+    while not termine:
+        infos_role = ajouter_role()
+        if infos_role == "q":
+        # Si on veut quitter
+            return
+        libelle_role = infos_role
+        inserer_role(libelle_role)
+        print("{} ajouté !".format(infos_role))
+        continuer = input("Voulez-vous continuer à ajouter de nouveaux roles ? (o pour oui ou n pour non) : ")
+        while continuer.lower()[0] not in ["o","n"]:
+            print("Saisie incorrecte !")
+            continuer = input("Voulez-vous continuer à ajouter de nouveaux roles ? (o pour oui ou n pour non) : ")
+        if continuer.lower()[0] == "n":
+            termine = True
+
+def recuperer_infos_roles():
+    """ Fonction qui récupère les infos de chaque entrée de la table role """
+    requeteSQL = """SELECT ID, LIBELLE 
+    FROM role"""
+    # Exécution de la requête
+    curseur.execute(requeteSQL)
+
+    # Traitement du résultat de la requête
+    resultat = curseur.fetchall()
+    if resultat:
+        return resultat
+    else:
+        print("Pas d'entrée correspondante ! recuperer_infos_roles")
+        
+def recuperer_infos_roles_par_id(id_role):
+    """ Fonction qui récupère les infosd'une entrée de la table role par id"""
+    requeteSQL = """SELECT LIBELLE 
+    FROM role
+    WHERE id = ?"""
+    # Exécution de la requête
+    curseur.execute(requeteSQL, [id_role])
+
+    # Traitement du résultat de la requête
+    resultat = curseur.fetchall()
+    if resultat:
+        return resultat[0][0]
+    else:
+        print("Pas d'entrée correspondante ! recuperer_infos_roles")    
+    
+def afficher_roles():
+    infos_roles = recuperer_infos_roles()
+    liste_ids_roles = []
+    print("\n--------\nAffichage des roles\n")
+    for role in infos_roles:
+        liste_ids_roles.append(role[0])
+        print("{} - {}".format(role[0], role[1]))
+    print("--------\n")
+    return liste_ids_roles
+
+def selectionner_acteurs_et_roles():
+    termine = False
+    liste_acteurs_et_roles_appaires = []
+    while not termine:
+        print("Sélectionner un acteur : ")
+        liste_ids_acteurs = afficher_acteurs()
+        choix_acteur = int(input("Saisir le numéro d'un des acteurs ci-dessus : "))
+        while choix_acteur not in liste_ids_acteurs:
+            afficher_acteurs()
+            print("Sélectionnez dans la liste ci-dessus !")
+            choix_acteur = int(input("Saisir le numéro d'un des acteurs ci-dessus : "))
+        id_acteur = choix_acteur
+        print("Sélectionner un role : ")
+        liste_ids_roles = afficher_roles()
+        choix_role = int(input("Saisir le numéro d'un des roles ci-dessus (qui correspond au role de {}) : ".format(recuperer_infos_acteurs_par_id(id_acteur))))
+        while choix_role not in liste_ids_roles:
+            afficher_roles()
+            print("Sélectionnez dans la liste ci-dessus !")
+            choix_role = int(input("Saisir le numéro d'un des roles ci-dessus (qui correspond au role de {}) : ".format(recuperer_infos_acteurs_par_id(id_acteur))))
+        id_role = choix_role
+        
+        acteur_et_role = recuperer_infos_acteurs_par_id(id_acteur) + " en tant que " + recuperer_infos_roles_par_id(id_role)
+        valider_acteur_et_role = input("Validez-vous '{}' (o pour oui ou n pour non) : ".format(acteur_et_role)).lower()[0]
+        while valider_acteur_et_role not in ["o","n"]:
+           print("Erreur de saisie.")
+           valider_acteur_et_role = input("Validez-vous '{}' (o pour oui ou n pour non) : ".format(acteur_et_role)).lower()[0]
+        if valider_acteur_et_role == "o":
+            liste_acteurs_et_roles_appaires.append([id_acteur, id_role])
+        continuer = input("Sélectionner d'autres acteurs et rôles ? (o pour oui ou n pour non) : ").lower()[0]
+        while continuer not in ["o","n"]:
+            print("Erreur de saisie !")
+            continuer = input("Sélectionner d'autres acteurs et rôles ? (o pour oui ou n pour non) : ").lower()[0]
+        if continuer == "n":
+            termine = True
+    return liste_acteurs_et_roles_appaires
+            
+
+def inserer_casting(id_film, liste_acteurs_et_roles_appaires):
+    for couple_ids_acteur_et_role in liste_acteurs_et_roles_appaires:
+        id_acteur = couple_ids_acteur_et_role[0]
+        id_role = couple_ids_acteur_et_role[1]
+        requeteSQL = """INSERT INTO liste_acteurs(id_film, id_acteur, id_role)
+        VALUES (?, ?, ?)"""
+        curseur.execute(requeteSQL, [id_film, id_acteur, id_role])    
+        connexion.commit()
+    
+def inserer_support(id_film, type_support, prix, quantite):
+    requeteSQL = """INSERT INTO support(id_film, type_support, prix, quantite)
+        VALUES (?, ?, ?, ?)"""
+    curseur.execute(requeteSQL, [id_film, type_support, prix, quantite])    
+    connexion.commit() 
+
+def ajouter_support(id_film): 
+    print("--------\nAjout de supports :")
+    termine = False
+    type_support = "Default"
+    while not termine:
+        print("--------\nSaisie des infos du support :")
+        choix_support = int(input("1 - Pour ajouter des Blue-Ray\n2 - Pour ajouter des DVD\n--------\n0 pour quitter\nVotre choix : "))
+        while choix_support not in [0,1,2]:
+            print("--------\nSaisie des infos du support :")
+            choix_support = int(input("1 - Pour ajouter des Blue-Ray\n2 - Pour ajouter des DVD\n Votre choix : "))
+        if choix_support == 2:
+            type_support = "DVD"
+        elif choix_support == 1:
+            type_support = "Blue-Ray"
+        elif choix_support == 0:
+            print("Ajout de support annulé !")
+            return
+        choix_prix = float(input("Veuillez saisir le prix (un nombre de la forme xx.xx) : "))
+        choix_quantite = int(input("Veuillez saisir la quantité à mettre en stock (un nombre entier) : "))
+        prix = choix_prix
+        quantite = choix_quantite
+        valider_insertion_support = input("Confirmer l'ajout du support : {} pour {}€ avec {} unité(s). Saisir o pour oui, n pour non : ".format(type_support, prix, quantite)).lower()[0]
+        if valider_insertion_support == "o":
+            inserer_support(id_film, type_support, prix, quantite)
+            print("Support ajouté !")
+        elif valider_insertion_support == 'n':
+            print("Annulation de l'ajout du support")
+        continuer = input("Souhaitez-vous continuer à ajouter des supports ? (o pour oui, n pour non) : ").lower()[0]
+        while continuer not in ["o", "n"]:
+            print("Erreur de saisie !")
+            continuer = input("Souhaitez-vous continuer à ajouter des supports ? (o pour oui, n pour non) : ").lower()[0]
+        if continuer == "n":
+            termine = True
+    afficher_supports_disponibles_par_id_film(id_film)
+
 def ajouter_film():
-    print("\nAjout d'un film")
+    print("--------\nAjout d'un film")
+    saisie = saisir_infos_film()
+    if saisie == 'q':
+        # Si la saisie consiste à quitter on termine l'ajout
+        print("Ajout annulé !\n--------")
+        return
+    
+    # On attribue les infos de la saisie à chaque variable correspondante
+    titre, date_sortie, duree, genre, nationalite = saisie
+    inserer_film(titre, date_sortie, duree, genre, nationalite)
+    
+    # On passe à la gestion des ajout d'acteurs et de rôles
+    afficher_acteurs()
+    ajouter_des_acteurs = input("Y aura-t'il de nouveaux acteurs ? (o pour oui ou n pour non) : ").lower()[0]
+    while ajouter_des_acteurs not in ["o","n"]:
+        print("Erreur de saisie")
+        ajouter_des_acteurs = input("Y aura-t'il de nouveaux acteurs ? (o pour oui ou n pour non) : ").lower()[0]        
+    ajouter_des_roles = input("Y aura-t'il de nouveaux rôles ? (o pour oui ou n pour non) : ").lower()[0]
+    while ajouter_des_roles not in ["o","n"]:
+        print("Erreur de saisie")
+        ajouter_des_roles = input("Y aura-t'il de nouveaux rôles ? (o pour oui ou n pour non) : ").lower()[0]
+    if ajouter_des_acteurs == "o":
+        nouveaux_acteurs()
+    if ajouter_des_roles == "o":
+        nouveaux_roles()
+    
+    # On sélectionne les acteurs à ajouter 
+    liste_acteurs_et_roles_appaires = selectionner_acteurs_et_roles()
+    id_film = recuperer_id_film(titre, date_sortie, duree, genre, nationalite)
+    inserer_casting(id_film, liste_acteurs_et_roles_appaires)
+    
+    # On ajoute les supports
+    ajouter_support(id_film)
+    print("Film ajouté\n--------")
+    afficher_films()
 
 #------------------------------------------------------------------------------
 #                  Fonctions pour retirer un film
 #------------------------------------------------------------------------------
 
-
+def supprimer_liste_acteurs(id_film):
+    requeteSQL = """DELETE FROM liste_acteurs WHERE id_film = ?"""
+    curseur.execute(requeteSQL, [id_film])    
+    connexion.commit()
     
+def recuperer_ids_support(id_film):
+    liste_ids_supports = []
+    requeteSQL = """SELECT id FROM support WHERE id_film = ?"""
+    curseur.execute(requeteSQL, [id_film]) 
+    resultat = curseur.fetchall()
+    if resultat:
+        # Ajout de l'id de support à la liste
+        for i in range(len(resultat)):
+            liste_ids_supports.append(resultat[i][0]) 
+    else:
+        print("Pas d'entrée correspondante ! recuperer_ids_support")
+    return liste_ids_supports
+
+def effacer_location_selon_id_support(liste_ids_supports):
+    """Fonction qui parcourt une liste d'id de supports 
+    et efface les locations utilisant ce support"""
+    
+    for id_support in liste_ids_supports:
+        requeteSQL = """DELETE FROM location WHERE id_support = ?"""
+        curseur.execute(requeteSQL, [id_support])    
+        connexion.commit()
+
+def effacer_les_supports(liste_ids_supports):
+    """Fonction qui parcourt une liste d'id de supports 
+    et efface le support correspondant"""
+    
+    for id_support in liste_ids_supports:
+        requeteSQL = """DELETE FROM support WHERE id = ?"""
+        curseur.execute(requeteSQL, [id_support])    
+        connexion.commit()
+
+def effacer_film(id_film):
+    requeteSQL = """DELETE FROM film WHERE id = ?"""
+    curseur.execute(requeteSQL, [id_film])    
+    connexion.commit()
+
 def retirer_film():
     print("\nRetrait d'un film")
-
+    afficher_films()
+    liste_id_films_disponibles = [0]
+    for film in recuperer_infos_films():
+        # On récupère les indices des films existants
+        liste_id_films_disponibles.append(film[0])
+    afficher_films()
+    print("--------\n0 pour quitter")
+    choix = int(input("""Veuillez sélectionner
+l'une des options ci-dessus (le numéro du film) : """))
+    while choix not in liste_id_films_disponibles:
+        afficher_films()
+        print("--------\n0 pour quitter")
+        print("Le choix doit se faire parmi les propositions ci-dessus !")
+        choix = int(input("""Veuillez sélectionner l'une 
+des options ci-dessus (le numéro du film) : """))
+    if choix == 0: # Si on choisit 0 on quitte la fonction
+        print("Retrait annulé !\n--------")
+        return
+    id_film = choix
+    infos_film = recuperer_infos_film_par_id(id_film)
+    titre = infos_film[1]
+    date_sortie = "({})".format(infos_film[2])
+    valider_retrait = input("Confirmer la suppression de {} (o pour oui et n pour non) : ".format(
+        titre+" "+date_sortie))
+    while valider_retrait.lower()[0] not in ["o","n"]:
+        valider_retrait = input("Confirmer la suppression de {} (o pour oui et n pour non) : ".format(
+            titre+" "+date_sortie))
+    if valider_retrait[0].lower() == 'n':
+    # Si on veut annuler on quitte le programme
+        print("Retrait annulé !\n--------")
+        return
+    elif valider_retrait[0].lower() == 'o':
+        # On supprime le casting du film
+        print("--------\nEffacement du casting")
+        supprimer_liste_acteurs(id_film)
+        # On récupère la liste des support pour ce film
+        liste_ids_supports = recuperer_ids_support(id_film)
+        # On efface les locations qui ont loué des supports du film
+        print("--------\nEffacement des locations\n--------")
+        effacer_location_selon_id_support(liste_ids_supports)
+        # On efface les supports
+        print("--------\nEffacement des supports")
+        effacer_les_supports(liste_ids_supports)
+        # On peut maintenant effacer le film
+        print("--------\nEffacement du film\n--------")
+        effacer_film(id_film)
+    print("Film retiré\n--------")
 
 #------------------------------------------------------------------------------
 #                       Fonction de menu

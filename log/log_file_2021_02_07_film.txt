@@ -1,0 +1,87 @@
+Le : 07/02/2021
+Base de données : film.sqlite
+Requêtes valides effectuées et résultats correspondant
+
+
+SELECT COUNT(distinct id)     FROM location     WHERE id_support = 5
+COUNT(distinct id)
+------------------
+1    
+
+
+SELECT COUNT(distinct id)     FROM location     WHERE id_support = 1
+COUNT(distinct id)
+------------------
+0    
+
+
+INSERT INTO location(email, id_support, date_debut, date_fin)     VALUES ('mail', 2, '2000-01-01', '2000-01-01')
+Voici les effets de la modification : 
+id   email                                id_supportdate_debut    date_fin      
+--------------------------------------------------------------------------------
+1    fan2superheros@agroparistech.fr      2    2018-05-25    2018-06-25    
+2    fan2superheros@agroparistech.fr      3    2018-05-25    2018-06-25    
+3    fan2superheros@agroparistech.fr      5    2018-05-25    2018-06-25    
+4    fan2superheros@agroparistech.fr      7    2018-05-25    2018-06-25    
+5    cumberbatch4ever@agroparistech.fr    4    2018-04-10    2018-05-10    
+6    cumberbatch4ever@agroparistech.fr    8    2018-04-10    2018-05-10    
+7    mail                                 2    2000-01-01    2000-01-01    
+La modification a été annulée ! 
+
+
+DELETE FROM film WHERE id = 7
+Voici les effets de la modification : 
+id   titre                     date_sortie   duree  genre        nationalite
+----------------------------------------------------------------------------
+1    Iron Man                  2008-04-30    126    Action       USA       
+2    Sherlock Holmes           2010-02-03    129    Action       USA       
+3    Doctor Strange            2016-10-26    115    Action       USA       
+4    Avengers: Infinity War    2018-04-23    160    Action       USA       
+5    Avengers                  2012-04-25    143    Action       USA       
+6    Sherlock Holmes S1E1      2010-07-25    90     Detective    UK        
+8    Juju fait le malin        2021-02-07    2      Comédie      FRANCE    
+9    Juju                                    2                             
+La modification a été validée ! 
+
+
+DELETE FROM film WHERE id = 8
+Voici les effets de la modification : 
+id   titre                     date_sortie   duree  genre        nationalite
+----------------------------------------------------------------------------
+1    Iron Man                  2008-04-30    126    Action       USA    
+2    Sherlock Holmes           2010-02-03    129    Action       USA    
+3    Doctor Strange            2016-10-26    115    Action       USA    
+4    Avengers: Infinity War    2018-04-23    160    Action       USA    
+5    Avengers                  2012-04-25    143    Action       USA    
+6    Sherlock Holmes S1E1      2010-07-25    90     Detective    UK     
+9    Juju                                    2                          
+La modification a été validée ! 
+
+
+DELETE FROM film WHERE id = 9
+Voici les effets de la modification : 
+id   titre                     date_sortie   duree  genre        nationalite
+----------------------------------------------------------------------------
+1    Iron Man                  2008-04-30    126    Action       USA    
+2    Sherlock Holmes           2010-02-03    129    Action       USA    
+3    Doctor Strange            2016-10-26    115    Action       USA    
+4    Avengers: Infinity War    2018-04-23    160    Action       USA    
+5    Avengers                  2012-04-25    143    Action       USA    
+6    Sherlock Holmes S1E1      2010-07-25    90     Detective    UK     
+La modification a été validée ! 
+
+
+DELETE FROM film WHERE id = 10
+Voici les effets de la modification : 
+id   titre                     date_sortie   duree  genre        nationalite
+----------------------------------------------------------------------------
+1    Iron Man                  2008-04-30    126    Action       USA     
+2    Sherlock Holmes           2010-02-03    129    Action       USA     
+3    Doctor Strange            2016-10-26    115    Action       USA     
+4    Avengers: Infinity War    2018-04-23    160    Action       USA     
+5    Avengers                  2012-04-25    143    Action       USA     
+6    Sherlock Holmes S1E1      2010-07-25    90     Detective    UK      
+7    The Irishman              2019-11-27    209    Thriller     USA     
+8    Test                      test          0      Test         TEST    
+9    test2                     0000-01-01    0      Test         TEST    
+La modification a été validée ! 
