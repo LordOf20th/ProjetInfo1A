@@ -30,7 +30,9 @@ def tuple_vers_chaine(tuple):
     chaine = chaine[1:-1]   # on enlève les parenthèses de début et de fin
     return (chaine.replace(",", "\t"))  # on remplace la virgule avec une tabulation
                                         # et on renvoie cette chaine
-                                        
+
+def attendre_entree():
+    input("Appuyer sur Entrée pour continuer")
 #------------------------------------------------------------------------------
 #                  Fonctionnalités du vidéoclub
 #------------------------------------------------------------------------------
@@ -64,7 +66,7 @@ def recuperer_casting(id_film):
     if resultat:
         return resultat
     else:
-        print("Pas d'entrée correspondante ! recuperer_casting ")     
+        return 0 # On gère le cas où il n'y a pas de casting   
     
 def tuple_vers_casting(tuple):
     return "avec {} {} en tant que {}".format(tuple[0],tuple[1],tuple[2])
@@ -95,22 +97,32 @@ def afficher_films():
         id_film = infos_films[i][0] # on recupere l'id du ieme film
         infos_casting = recuperer_casting(id_film)
         cast=[]
-        for acteur_et_role in infos_casting:
-            # On ajoute le cast dans la liste d'info
-            cast.append(tuple_vers_casting(acteur_et_role)) 
-        infos_films[i].append(cast)
+        if infos_casting != 0: 
+        # S'il y a un casting alors on ajoute le casting
+            for acteur_et_role in infos_casting:
+                # On ajoute le cast dans la liste d'info
+                cast.append(tuple_vers_casting(acteur_et_role)) 
+            infos_films[i].append(cast)
     print("\nListe des films du vidéoclub : ")
     for film in infos_films:
         print("--")
-        print("{} - {} ({}), {} min, {}, {}. Casting : {}".format(film[0],
+        if len(film) == 7: # Si il y a un casting 
+            print("{} - {} ({}), {} min, {}, {}. Casting : {}".format(film[0],
                                                                   film[1],
                                                                   film[2],
                                                                   film[3],
                                                                   film[4],
                                                                   film[5], 
                                unite_casting_vers_casting_lisible(film[6])))
+        else: # Si pas de casting
+            print("{} - {} ({}), {} min, {}, {}.".format(film[0],
+                                                                  film[1],
+                                                                  film[2],
+                                                                  film[3],
+                                                                  film[4],
+                                                                  film[5]))
     print("\n--------\n")
-
+    
         
 
 #------------------------------------------------------------------------------
@@ -140,7 +152,7 @@ def recuperer_supports_par_id_film(id_film):
     if resultat:
         return resultat
     else:
-        print("Pas de support dispo !")
+        print("Pas de support disponible !")
         return 0
         
 def compter_nombre_fois_supports_loues(id_support):
@@ -231,7 +243,7 @@ des options ci-dessus (le numéro du film) : """))
                                                  infos_film[5]))
     liste_de_supports = afficher_supports_disponibles_par_id_film(id_film)
     if liste_de_supports == 0:
-        print("Impossible louer ce film, il n'y a pas de supports du tout")
+        print("Impossible de louer ce film")
         return
     print("--------\n0 pour quitter")
     # On initialise avec -1 qui code pour quitter
@@ -361,7 +373,7 @@ def supprimer_location(id_location):
     connexion.commit()
     
 def verifier_retours():
-    print("Vérification des retours")
+    print("Vérification des retours :")
     liste_locations_finies = recupere_locations_finies_aujourdhui()
     nombre_locations_revenues = 0
     for location_finie in liste_locations_finies:
@@ -369,7 +381,7 @@ def verifier_retours():
         id_location = location_finie[0]
         # On récupère les infos de la location échue
         infos_location_finie=recuperer_infos_location(id_location)
-        print("Pour la location :\nID : {} - {} en {} par {} du {} au {} pour {} euros\n".format(
+        print("--------\nPour la location :\nID : {} - {} en {} par {} du {} au {} pour {} euros\n".format(
             id_location,
             infos_location_finie[0],
             infos_location_finie[1],
@@ -378,13 +390,14 @@ def verifier_retours():
             infos_location_finie[4],
             infos_location_finie[5]))
         valider_suppression_location = input("Le support est revenu en stock ? (saisir o ou n pour oui ou non) : ")
-        while valider_suppression_location == "" or valider_suppression_location.lower()[0] != "o" or valider_suppression_location.lower()[0] != "n":
+        while valider_suppression_location.lower()[0] not in ["o","n"]:
             valider_suppression_location = input("Le support est revenu en stock ? (saisir o ou n pour oui ou non) : ")
         if valider_suppression_location.lower()[0] == "o":
             supprimer_location(id_location)
             nombre_locations_revenues += 1
         elif valider_suppression_location.lower()[0] == "n":
-            print("La location n'est pas revenue, penser à renvoyer un mail à {}".format(infos_location_finie[2]))
+            print("La location n'est pas revenue, penser à renvoyer un mail à {}\n--------\n".format(infos_location_finie[2]))
+        print("Aujourd'hui il y a eu {} retour(s)".format(nombre_locations_revenues))
     return
 
 #------------------------------------------------------------------------------
@@ -455,6 +468,7 @@ def ajouter_acteur():
         nom = input("Veuillez saisir le nom : ").capitalize()
         prenom = input("Veuillez saisir le prénom : ").capitalize()
         site_web = input("Veuillez saisir le site web (facultatif, Entrée pour passer) : ")
+        print("\n")
         if site_web == "":
             print("{} {}".format(prenom, nom))
         elif site_web != "":
@@ -846,6 +860,50 @@ des options ci-dessus (le numéro du film) : """))
     print("Film retiré\n--------")
 
 #------------------------------------------------------------------------------
+#               Fonctions pour modifier les support d'un film
+#------------------------------------------------------------------------------
+
+def ajouter_support_pour_film_vide():
+    termine = False
+    while not termine:
+        print("\n--------\nAjout de support pour un film qui n'en a pas' : ")
+        liste_id_films_disponibles = [0]
+        for film in recuperer_infos_films():
+            # On récupère les indices des films existants
+            liste_id_films_disponibles.append(film[0])
+        afficher_films()
+        print("0 pour quitter")
+        choix = int(input("""Veuillez sélectionner
+l'une des options ci-dessus (le numéro du film) : """))
+        while choix not in liste_id_films_disponibles:
+            afficher_films()
+            print("0 pour quitter")
+            print("Le choix doit se faire parmi les propositions ci-dessus !")
+            choix = int(input("""Veuillez sélectionner l'une 
+des options ci-dessus (le numéro du film) : """))
+        if choix == 0: # Si on choisit 0 on quitte la fonction
+            print("Ajout annulé!")
+            return
+        id_film = choix
+        infos_film = recuperer_infos_film_par_id(id_film)
+        print("\nFilm sélectionné :")
+        print("{} - {} ({}), {} min, {}, {}.".format(infos_film[0],
+                                                 infos_film[1],
+                                                 infos_film[2],
+                                                 infos_film[3],
+                                                 infos_film[4],
+                                                 infos_film[5]))
+        liste_de_supports = recuperer_supports_par_id_film(id_film)
+        if liste_de_supports != 0:
+            # S'il y a déjà des supports
+            print("Impossible d'ajouter des supports à ce film (il en a déjà)")
+            attendre_entree()
+        elif liste_de_supports == 0:
+            # Si pas de support on en ajoute au film
+            ajouter_support(id_film)
+    return
+
+#------------------------------------------------------------------------------
 #                       Fonction de menu
 #------------------------------------------------------------------------------
 
@@ -855,30 +913,45 @@ def menu():
         print("""\n--MENU--\n1 - Afficher la liste des films \n2 - Louer un film
 3 - Afficher les locations
 4 - Vérification des retours\n5 - Ajouter un film
-6 - Retirer un film \n--------\n0 pour quitter""")
+6 - Retirer un film
+7 - Ajouter des supports à un film qui n'en a pas
+--------
+0 pour quitter""")
         choix = int(input("Veuillez sélectionner l'une des options ci-dessus (le numéro) : "))
-        while choix not in [0,1,2,3,4,5,6]:
+        while choix not in [0,1,2,3,4,5,6,7]:
             print("Le choix doit se faire parmi les propositions ci-dessus !")
             print("""\n1 - Afficher la liste des films \n2 - Louer un film
 3 - Afficher les locations
 4 - Vérification des retours\n5 - Ajouter un film
-6 - Retirer un film \n--------\n0 pour quitter""")
+6 - Retirer un film 
+7 - Ajouter des supports à un film qui n'en a pas
+--------
+0 pour quitter""")
             choix = int(input("Veuillez sélectionner l'une des options ci-dessus (le numéro) : "))
         if choix == 0:
             print("Au revoir !")
             return
         elif choix == 1:
             afficher_films()
+            attendre_entree()
         elif choix == 2:
             louer_film()
+            attendre_entree()
         elif choix == 3:
             afficher_locations()
+            attendre_entree()
         elif choix == 4:
             verifier_retours()
+            attendre_entree()
         elif choix == 5:
             ajouter_film()
+            attendre_entree()
         elif choix == 6:
             retirer_film()
+            attendre_entree()
+        elif choix == 7:
+            ajouter_support_pour_film_vide()
+            attendre_entree()
         else:
             print("Erreur de choix !")
         
