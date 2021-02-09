@@ -708,6 +708,11 @@ def ajouter_support(id_film):
             type_support = "Blue-Ray"
         elif choix_support == 0:
             print("Ajout de support annulé !")
+            if recuperer_supports_par_id_film(id_film) == 0:
+                # Si il n'y a pas de supports on prévient l'utilisateur
+                print("""Attention, vous n'avez pas ajouté de support !
+Il faudra en ajouter si vous voulez pouvoir louer le film""")
+                attendre_entree()
             return
         choix_prix = float(input("Veuillez saisir le prix (un nombre de la forme xx.xx) : "))
         choix_quantite = int(input("Veuillez saisir la quantité à mettre en stock (un nombre entier) : "))
@@ -910,6 +915,7 @@ des options ci-dessus (le numéro du film) : """))
 def menu():
     resterDansLeMenu = True
     while resterDansLeMenu:
+        print("\n----------------------------------------\n*** Logiciel de Gestion de VideoClub ***\n----------------------------------------")
         print("""\n--MENU--\n1 - Afficher la liste des films \n2 - Louer un film
 3 - Afficher les locations
 4 - Vérification des retours\n5 - Ajouter un film
